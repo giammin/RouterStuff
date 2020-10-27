@@ -1,0 +1,15 @@
+#!/bin/sh
+. /etc/functions.sh
+WAN=ppp0
+
+echo "   Setting Up Logging "
+iptables -A input_rule -j LOG  --log-prefix 'input_rule: '
+iptables -A output_rule -j LOG  --log-prefix 'output_rule: '
+iptables -A forwarding_wan -j LOG  --log-prefix 'forward_rule: '
+iptables -t nat -A prerouting_rule -j LOG  --log-prefix 'prerouting_rule: '
+iptables -t nat -A postrouting_rule -j LOG  --log-prefix 'postrouting_rule: '
+iptables -A input_wan -j LOG  --log-prefix 'input_wan: '
+iptables -A forwarding_wan -j LOG  --log-prefix 'forward_wan: '
+iptables -t nat -A prerouting_wan -j LOG  --log-prefix 'prerouting_wan: '
+
+echo "   Done!"

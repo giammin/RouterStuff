@@ -1,0 +1,28 @@
+#!/bin/sh
+ 
+# logger Checking cjb ip
+ USER="XXXXXXXXX"
+ PASS="XXXXXXXXX"
+ 
+ if [ ! -d /tmp/cjb ]
+ then
+    mkdir /tmp/cjb
+ fi
+
+
+ if [  -f /tmp/cjb/cjbip ]
+ then
+ 	past_ip=`cat /tmp/cjb/cjbip`
+ else
+ 	past_ip="first"
+ fi
+       
+ current_ip=$(ifconfig ppp0 | grep "inet addr" | awk '{print $2}' | awk -F ':' '{print $2}')
+  
+if [ ${past_ip} != ${current_ip} ] ; then
+   exec wget -q -O /tmp/cjb/cjb.htm -q "http://www.cjb.net/cgi-bin/dynip.cgi?username=$USER&password=$PASS" 2>&1 &
+   echo $current_ip > /tmp/cjb/cjbip
+   echo $(date) -- $current_ip >>  /tmp/cjb/cjbip.history
+   logger Update $USER.cjb.net to Your IP $current_ip
+   rm /tmp/cjb/cjb.htm
+fi

@@ -1,0 +1,18 @@
+#!/bin/sh
+. /etc/functions.sh
+WAN=ppp0
+
+echo "   Enabling DNAT port forward for Steam"
+for n in $( seq 27000 27020 )
+do
+        iptables -t nat -A prerouting_wan -p udp --dport $n -j DNAT --to 192.168.254.25
+        iptables        -A forwarding_wan -p udp --dport $n -d 192.168.254.25 -j ACCEPT
+done
+                
+for n in $( seq 27020 27050 )
+do
+        iptables -t nat -A prerouting_wan -p tcp --dport $n -j DNAT --to 192.168.254.25
+        iptables        -A forwarding_wan -p tcp --dport $n -d 192.168.254.25 -j ACCEPT
+done
+
+echo "   Done!"

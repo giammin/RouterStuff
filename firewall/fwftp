@@ -1,0 +1,9 @@
+#!/bin/sh
+. /etc/functions.sh
+WAN=ppp0
+
+echo "   Enabling DNAT port forward for Ftp Server"
+iptables -t nat -A prerouting_rule -i $WAN -p tcp --dport 21 -j DNAT --to 192.168.254.25
+iptables        -A forwarding_wan -i $WAN -p tcp --dport 21 -d 192.168.254.25 -j ACCEPT
+
+echo "   Done!"

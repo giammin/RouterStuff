@@ -1,0 +1,35 @@
+#!/bin/sh
+ 
+# logger Checking duckdns ip
+ USER="XXXXXXXXXX"
+ PASS="XXXXXXXXXXXXXXXXXX"
+ 
+ if [ ! -d /tmp/duckdns ]
+ then
+    mkdir /tmp/duckdns
+ fi
+
+
+ if [  -f /tmp/duckdns/duckdnsip ]
+ then
+ 	past_ip=`cat /tmp/duckdns/duckdnsip`
+ else
+ 	past_ip="first"
+ fi
+       
+ current_ip=$(ifconfig pppoe-wan | grep "inet addr" | awk '{print $2}' | awk -F ':' '{print $2}')
+  
+if [ ${past_ip} != ${current_ip} ] ; then
+    exec wget --no-check-certificate -q -O /tmp/duckdns/duckdns.htm -q "https://www.duckdns.org/update?domains=$USER&token=$PASS&ip=" 2>&1 &
+#   response=`cat /tmp/duckdns/duckdns.htm`
+#   if [ ${response} = "OK" ] ; then
+   	echo $current_ip > /tmp/duckdns/duckdnsip
+   	echo $(date) -- $current_ip >>  /tmp/duckdns/duckdns.history
+   	logger Update  $USER.duckdns.org to Your IP $current_ip
+#   else
+#   	echo $(date) -- Error updating duckdns  >>  /tmp/duckdns/duckdns.history
+#        logger ERROR updating  $USER.duckdns.org to Your IP $current_ip
+#   fi        
+   
+   rm /tmp/duckdns/duckdns.htm
+fi

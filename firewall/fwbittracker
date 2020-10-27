@@ -1,0 +1,14 @@
+#!/bin/sh
+. /etc/functions.sh
+WAN=ppp0
+
+echo "   Enabling DNAT port forward for BitTorrent Tracker"
+iptables -t nat -A prerouting_wan -i $WAN -p tcp --dport 8080 -j DNAT --to 192.168.254.25
+iptables        -A forwarding_wan -i $WAN -p tcp --dport 8080 -d 192.168.254.25 -j ACCEPT
+iptables -t nat -A prerouting_wan -i $WAN -p udp --dport 8080 -j DNAT --to 192.168.254.25
+iptables        -A forwarding_wan -i $WAN -p udp --dport 8080 -d 192.168.254.25 -j ACCEPT
+#stats
+iptables -t nat -A prerouting_wan -i $WAN -p tcp --dport 8888 -j DNAT --to 192.168.254.25
+iptables        -A forwarding_wan -i $WAN -p tcp --dport 8888 -d 192.168.254.25 -j ACCEPT
+
+echo "   Done!"

@@ -1,0 +1,10 @@
+#!/bin/sh
+. /etc/functions.sh
+WAN=ppp0
+host=$1
+
+echo "   Enable logging for all traffic of" $host
+iptables  -A forwarding_wan -o ppp0 -s $host -j LOG
+iptables  -A forwarding_wan -i ppp0 -d $host -j LOG
+
+echo "   Done!"

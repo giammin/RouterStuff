@@ -1,0 +1,73 @@
+echo -e "\n Setting Firewall!.\n"
+
+#COSTANTI LOCALI
+mylan="192.168.254.0/24"
+EXTIF=$(nvram get wan_ifname)
+INTIF=$(nvram get lan_ifname)
+
+echo "   Clearing any existing rules and setting default policy.."
+iptables -P INPUT ACCEPT
+iptables -F INPUT 
+iptables -P OUTPUT ACCEPT
+iptables -F OUTPUT 
+iptables -P FORWARD ACCEPT
+iptables -F FORWARD 
+iptables -t nat -F
+
+#aggiunte da firewall-masq
+iptables -t nat -P PREROUTING ACCEPT
+iptables -t nat -P POSTROUTING ACCEPT
+iptables -t nat -P OUTPUT ACCEPT
+
+#giamm
+echo "   Enabling DNAT port forward for Terminal Server"
+iptables -t nat -A PREROUTING -p tcp -i $EXTIF --dport 3389 -j DNAT --to-destination 192.168.254.25:3389
+
+echo "   Enabling DNAT port forward for IIS Server"
+iptables -t nat -A PREROUTING -p tcp -i $EXTIF --dport 80 -j DNAT --to-destination 192.168.254.25:80
+
+echo "   Enabling DNAT port forward for p2p"
+for n in $(seq 6680 6700); do
+	iptables -t nat -A PREROUTING -p tcp -i $EXTIF --dport $n -j DNAT --to-destination 192.168.254.25:$n
+	iptables -t nat -A PREROUTING -p udp -i $EXTIF --dport $n -j DNAT --to-destination 192.168.254.25:$n
+done
+iptables -t nat -A PREROUTING -p udp -i $EXTIF --dport 25577 -j DNAT --to-destination 192.168.254.25:25577
+iptables -t nat -A PREROUTING -p tcp -i $EXTIF --dport 25577 -j DNAT --to-destination 192.168.254.25:25577
+	
+#yuri
+iptables -t nat -A PREROUTING -p TCP -i $EXTIF --dport 5699 -j DNAT --to-destination 192.168.254.27:5699
+iptables -t nat -A PREROUTING -p UDP -i $EXTIF --dport 5257 -j DNAT --to-destination 192.168.254.27:5257
+	
+#kinkydoc
+iptables -t nat -A PREROUTING -p TCP -i $EXTIF --dport 4699 -j DNAT --to-destination 192.168.254.26:4699
+iptables -t nat -A PREROUTING -p UDP -i $EXTIF --dport 4257 -j DNAT --to-destination 192.168.254.26:4257
+	
+# loopback
+echo "   INPUT-OUTPUT: loopback"
+iptables -A OUTPUT -s 0.0.0.0/0 -d 0.0.0.0/0 -p all   -j ACCEPT -o lo
+iptables -A INPUT -s 0.0.0.0/0 -d 0.0.0.0/0 -p all   -j ACCEPT -i lo
+	
+# spoofing
+echo "   FWD: rules antispoofing"
+iptables -A FORWARD -s  192.168.0.0/16 -d 0.0.0.0/0 -p all   -j DROP -i $EXTIF
+iptables -A FORWARD -s  172.16.0.0/12 -d 0.0.0.0/0 -p all   -j DROP -i $EXTIF
+iptables -A FORWARD -s  10.0.0.0/8 -d 0.0.0.0/0 -p all   -j DROP -i $EXTIF
+iptables -A FORWARD -s  127.0.0.0/8 -d 0.0.0.0/0 -p all   -j DROP -i $EXTIF
+	
+echo "   FWD: Allow all connections OUT and only existing and related ones IN"
+iptables -A FORWARD -i $EXTIF -o $INTIF -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -p tcp --dport 6699 -m state --state NEW -j ACCEPT -i $EXTIF -o $INTIF
+iptables -A FORWARD -p udp --dport 6257 -m state --state NEW -j ACCEPT -i $EXTIF -o $INTIF
+iptables -A FORWARD -i $EXTIF -o $INTIF -j DROP
+iptables -A FORWARD -i $INTIF -o $EXTIF -j ACCEPT
+	
+echo "   Enabling SNAT (MASQUERADE) functionality on $EXTIF"
+iptables -t nat -A POSTROUTING -o $EXTIF -j MASQUERADE
+	
+# no finger
+iptables -t nat -A PREROUTING -p TCP --dport 79 -j DROP -i $EXTIF
+	
+# no telnet ssh etc
+iptables -A INPUT -s ! $mylan -p tcp --dport 23  -j DROP -i $EXTIF
+	
+echo -e "\n DONE!.\n"

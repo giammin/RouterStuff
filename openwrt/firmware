@@ -1,0 +1,24 @@
+Backing up the old firmware:
+    To backup the existing openwrt install, use the command:
+      dd if=/dev/mtdblock/1 of=/tmp/firmware.trx
+    This will produce a file containing the trx of the current firmware
+    (kernel and squashfs filesystems) followed by a dump of the jffs2
+    partition (including all installed packages) following the trx data
+    -- basically everything except the bootloader and NVRAM.
+
+    To restore from such a file you'll need to use OpenWrt's mtd command:
+      mtd -e linux -r write firmware.trx linux
+    Other methods of reflashing are likely to stop at the end of the trx
+    data, before restoring the jffs2 data.
+
+Trx image files from bin:
+
+dd bs=32 skip=1 if=original.bin of=original.trx
+
+flash firmware
+first line delete everything before flashing (-e linux)
+
+mtd -e linux -r write openwrt-brcm-2.4-squashfs.trx linux
+mtd -r write openwrt-brcm-2.4-squashfs.trx linux
+
+

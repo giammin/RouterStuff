@@ -1,0 +1,17 @@
+#!/bin/sh
+. /etc/functions.sh
+WAN=ppp0
+host=$1
+
+echo "   Drop any traffic for" $host
+iptables  -I FORWARD -o ppp0  -s $host -j DROP
+iptables  -I FORWARD -i ppp0  -d $host -j DROP
+
+echo "   Enable web traffic for" $host
+iptables  -I FORWARD -i ppp0 --sourceport 80 -d $host -j ACCEPT
+
+iptables  -I FORWARD -i ppp0 --sport 443 -d $host -j ACCEPT
+iptables  -I FORWARD -o ppp0 --dport 80 -s $host -j ACCEPT
+iptables  -I FORWARD -o ppp0 --dport 443 -s $host -j ACCEPT
+
+echo "   Done!"
