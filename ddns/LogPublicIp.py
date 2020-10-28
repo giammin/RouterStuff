@@ -6,6 +6,9 @@ import requests
 
 LOG = 'ip.log'
 URL = 'https://ipinfo.io/ip'
+DUCKDNS = 'https://www.duckdns.org/update?domains={}&token={}&ip='
+DOMAIN= 'XXXXXXX'
+TOKEN = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
 
 try:
     print('{} getting ip from {}'.format(datetime.now(), URL))
@@ -22,6 +25,9 @@ try:
         if ip != last_ip:
             f = open(LOG, 'a+')
             f.write("{} {}\n".format(datetime.now(), ip))
+            dr = requests.get(DUCKDNS.format(DOMAIN, TOKEN), timeout=10)
+            if dr.status_code==200:
+                print('{} {}.duckdns.org ip:{}'.format(datetime.now(), DOMAIN, ip))
         
         print('{} ip:{} lastip:{}'.format(datetime.now(), ip, last_ip))
     else:   
