@@ -25,9 +25,11 @@ try:
         if ip != last_ip:
             f = open(LOG, 'a+')
             f.write("{} {}\n".format(datetime.now(), ip))
-            dr = requests.get(DUCKDNS.format(DOMAIN, TOKEN), timeout=10)
-            if dr.status_code==200:
-                print('{} {}.duckdns.org ip:{}'.format(datetime.now(), DOMAIN, ip))
+            try:
+                dr = requests.get(DUCKDNS.format(DOMAIN, TOKEN), timeout=10)
+                print('{} {}.duckdns.org ip:{} response:{}'.format(datetime.now(), DOMAIN, ip, dr.status_code))
+            except Exception as inst:
+                 print('{} error updating duckdns {} {}\n'.format(datetime.now(), type(inst), inst.args))
         
         print('{} ip:{} lastip:{}'.format(datetime.now(), ip, last_ip))
     else:   
@@ -36,7 +38,7 @@ try:
         f = open(LOG, 'a+')
         f.write(msg)
 except Exception as inst:
-        msg="{} No connection {} {}\n".format(datetime.now(), type(inst), inst.args)
+        msg='{} No connection {} {}\n'.format(datetime.now(), type(inst), inst.args)
         print(msg)
         f = open(LOG, 'r')
         if 'No connection' not in (f.readlines()[-1]):
